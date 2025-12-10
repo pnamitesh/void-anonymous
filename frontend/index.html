@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOID Rooms</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Immersion & Animation */
+    body { background: #000; color: #a1a1aa; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    
+    .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.3; background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjEiIGZpbGw9IndoaXRlIiAvPjwvc3ZnPg=='); animation: drift 60s linear infinite; }
+    @keyframes drift { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
+    
+    .fade-in { animation: fadeIn 0.6s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .glow-text { text-shadow: 0 0 10px rgba(45, 212, 191, 0.5); }
+    
+    /* Chat Bubbles */
+    .chat-bubble { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; margin-bottom: 8px; }
+    .chat-me { background: rgba(45, 212, 191, 0.15); color: #ccfbf1; border: 1px solid rgba(45, 212, 191, 0.3); align-self: flex-end; border-bottom-right-radius: 2px; }
+    .chat-them { background: rgba(255, 255, 255, 0.08); color: #e4e4e7; border: 1px solid rgba(255, 255, 255, 0.1); align-self: flex-start; border-bottom-left-radius: 2px; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: #000; }
+  </style>
+</head>
+<body class="antialiased">
+
+  <audio id="ambientAudio" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_34d1979207.mp3?filename=space-ambience-10875.mp3" type="audio/mpeg">
+  </audio>
+
+  <div class="particles"></div>
+
+  <!-- <nav class="fixed top-0 w-full z-50 p-4 flex justify-between items-center bg-black/80 backdrop-blur-md border-b border-white/5">
+    <div onclick="navigateTo('home')" class="cursor-pointer text-lg tracking-widest text-teal-500 font-light uppercase glow-text">Void Rooms</div>
+    <div class="flex items-center gap-4">
+      <button onclick="toggleSound()" id="soundBtn" class="text-xs text-neutral-500 hover:text-white uppercase tracking-wider">🔇 Sound Off</button>
+      <div class="flex items-center gap-1 text-yellow-500/80 text-sm">
+        <span>✦</span> <span id="lightPoints">0</span>
+      </div>
+    </div>
+  </nav> -->
+
+  <nav class="fixed top-0 w-full z-50 p-4 flex justify-between items-center bg-black/80 backdrop-blur-md border-b border-white/5 transition-all">
+    <div class="flex items-center gap-3">
+      <button id="backBtn" onclick="navigateTo('home')" class="hidden text-white hover:text-teal-400 text-xl transition-colors">
+        ←
+      </button>
+      
+      <div onclick="navigateTo('home')" class="cursor-pointer text-lg tracking-widest text-teal-500 font-light uppercase glow-text">Void Anonymous</div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <!-- <button onclick="toggleSound()" id="soundBtn" class="text-xs text-neutral-500 hover:text-white uppercase tracking-wider">🔇 Sound Off</button> -->
+      <div class="flex items-center gap-1 text-yellow-500/80 text-sm">
+        <span>✦</span> <span id="lightPoints">0</span>
+      </div>
+    </div>
+  </nav>
+  
+  <div id="app" class="max-w-lg mx-auto min-h-screen pt-24 px-4 pb-24 relative z-10"></div>
+
+  <div class="fixed bottom-2 right-2 opacity-10 hover:opacity-100 transition-opacity">
+    <button onclick="openAdmin()" class="text-[10px] text-red-900">Admin</button>
+  </div>
+
+  <script>
+    // --- STATE ---
+    let state = { page: 'landing', userPoints: 0, audioPlaying: false, roomTab: 'my-posts' };
+    const emojis = { sad: "😢", confused: "😕", heartbroken: "💔", anxious: "😰", angry: "😠", lost: "🌌", numb: "😶" };
+    
+    // --- KEY MANAGEMENT (THE NEW AUTH) ---
+    const KEY_STORAGE_NAME = 'void_secret_key';
+    let myVoidKey = localStorage.getItem(KEY_STORAGE_NAME);
+
+    // If we have a key, skip to home. If not, stay on landing.
+    if (myVoidKey) state.page = 'home';
+
+    function generateVoidKey() {
+      // Create a random robust key: VOID-XXXX-XXXX-XXXX
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 to avoid confusion
+      let key = 'VOID';
+      for (let i = 0; i < 3; i++) {
+        key += '-';
+        for (let j = 0; j < 4; j++) key += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return key;
+    }
+
+    function login(key) {
+      if (!key || key.length < 10) return alert("Invalid Key format.");
+      myVoidKey = key;
+      localStorage.setItem(KEY_STORAGE_NAME, key);
+      navigateTo('home');
+    }
+
+    function logout() {
+      if(confirm("Warning: If you haven't saved your Key, you will lose your room forever. Logout?")) {
+        localStorage.removeItem(KEY_STORAGE_NAME);
+        myVoidKey = null;
+        window.location.reload();
+      }
+    }
+
+    function copyKey() {
+      navigator.clipboard.writeText(myVoidKey);
+      alert("Key copied to clipboard. Keep it safe.");
+    }
+
+    // --- API (UPDATED WITH HEADERS) ---
+    const api = {
+      get: async (url) => {
+        const res = await fetch(url, { headers: { 'x-void-key': myVoidKey } });
+        if (res.status === 401) { logout(); return null; }
+        return res.json();
+      },
+      post: async (url, body) => {
+        const res = await fetch(url, { 
+          method: 'POST', 
+          headers: {'Content-Type': 'application/json', 'x-void-key': myVoidKey}, 
+          body: JSON.stringify(body) 
+        });
+        if (res.status === 401) { logout(); return null; }
+        return res.json();
+      },
+    };
+
+    // --- ROUTER ---
+    function navigateTo(page) {
+      state.page = page;
+      render();
+      window.scrollTo(0, 0);
+    }
+
+    // --- VIEWS ---
+
+    // 1. NEW LANDING / LOGIN SCREEN
+    const ViewLanding = () => `
+      <div class="flex flex-col h-screen justify-center items-center fade-in px-6 relative z-20">
+        <h1 class="text-6xl font-thin text-white mb-2 tracking-tighter glow-text">VOID</h1>
+        <p class="text-teal-500/50 text-xs tracking-[0.5em] uppercase mb-12">Anonymous Identity System</p>
+
+        <div class="w-full max-w-sm space-y-8">
+          
+          <div class="bg-white/5 border border-white/10 p-6 rounded-xl text-center">
+            <h3 class="text-white text-lg font-light mb-2">New Arrival?</h3>
+            <p class="text-neutral-500 text-xs mb-4">Generate a secret key. This key IS your identity.</p>
+            <button onclick="let k = generateVoidKey(); login(k); alert('Your Key is: ' + k + '\\n\\nSave this somewhere safe!');" class="w-full py-3 bg-teal-600 hover:bg-teal-500 text-black font-bold rounded-lg transition-all uppercase tracking-widest text-sm">
+              Generate Identity
+            </button>
+          </div>
+
+          <div class="flex items-center justify-center gap-4 opacity-50">
+            <div class="h-[1px] bg-white/20 w-full"></div>
+            <span class="text-xs text-neutral-500 uppercase">OR</span>
+            <div class="h-[1px] bg-white/20 w-full"></div>
+          </div>
+
+          <div class="text-center">
+            <p class="text-neutral-400 text-xs mb-3 uppercase tracking-widest">Recover Existing Room</p>
+            <input type="text" id="loginKeyInput" placeholder="Paste your VOID-KEY..." class="w-full bg-black border border-white/20 p-3 rounded-lg text-white text-center tracking-widest uppercase mb-3 focus:border-teal-500 outline-none">
+            <button onclick="login(document.getElementById('loginKeyInput').value)" class="w-full py-3 border border-white/20 hover:bg-white/5 text-white rounded-lg transition-all uppercase text-xs tracking-widest">
+              Enter Void
+            </button>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    const ViewHome = () => `
+      <div class="flex flex-col h-[75vh] justify-center items-center fade-in text-center relative z-20">
+        <div class="absolute top-0 right-0 p-4">
+            <button onclick="logout()" class="text-[10px] text-red-900 hover:text-red-500 uppercase tracking-widest">Logout</button>
+        </div>
+        
+        <div class="mb-8">
+          <h1 class="text-6xl font-thin text-white mb-2 tracking-tighter glow-text">VOID</h1>
+          <div onclick="copyKey()" class="cursor-pointer group flex flex-col items-center">
+             <p class="text-teal-500/50 text-xs tracking-[0.2em] uppercase group-hover:text-teal-400 transition-colors">ID: ${myVoidKey ? myVoidKey.substring(0,9)+'...' : 'Loading'}</p>
+             <span class="text-[9px] text-neutral-600 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest mt-1">Click to Copy Key</span>
+          </div>
+        </div>
+
+        <div class="w-full space-y-4 max-w-xs">
+          <button onclick="navigateTo('write')" class="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-teal-200 transition-all group">
+            <span class="group-hover:tracking-widest transition-all duration-500">RELEASE PAIN</span>
+          </button>
+          
+          <button onclick="navigateTo('reply')" class="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-purple-300 transition-all group">
+             <span class="group-hover:tracking-widest transition-all duration-500">SEND LIGHT</span>
+          </button>
+          
+          <button onclick="navigateTo('myroom')" class="w-full py-4 text-neutral-500 hover:text-white text-xs uppercase tracking-widest transition-all">
+            Enter My Room
+          </button>
+        </div>
+      </div>
+    `;
+
+    // (Keep ViewWrite, ViewReply, ViewMyRoom, ViewAdmin mostly the same, 
+    // just ensure they call the updated 'api' object defined above)
+    
+    // ... [Insert the rest of your Views from the previous file here: ViewWrite, ViewReply, ViewMyRoom, ViewAdmin] ...
+    
+    /* NOTE: Paste the Views (ViewWrite, ViewReply, etc) exactly as they were in your uploaded file here.
+       The only critical change was adding ViewLanding and updating ViewHome.
+    */
+
+    const ViewWrite = () => `
+      <div class="fade-in">
+        <h2 class="text-2xl font-light text-white mb-6 text-center">Release your burden</h2>
+        <div class="mb-6 text-center">
+          <label class="text-[10px] text-neutral-500 uppercase tracking-widest mb-3 block">Select Topic</label>
+          <div class="flex flex-wrap gap-2 justify-center">
+            ${['general', 'love', 'work', 'family', 'life'].map(r => `
+              <button onclick="selectRoom('${r}')" class="room-btn px-4 py-2 rounded-full border border-white/10 bg-black text-xs text-neutral-400 hover:border-teal-500 hover:text-teal-500 transition-all uppercase ${selectedRoom === r ? 'border-teal-500 text-teal-500' : ''}" data-room="${r}">${r}</button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="grid grid-cols-4 gap-2 mb-6">
+          ${Object.keys(emojis).map(m => `
+            <button onclick="selectMood('${m}')" class="mood-btn p-3 rounded-xl border border-white/5 bg-white/5 hover:bg-teal-900/50 hover:border-teal-500 transition-all text-2xl flex flex-col items-center gap-2" data-mood="${m}">
+              ${emojis[m]} <span class="text-[8px] uppercase tracking-wider text-neutral-400">${m}</span>
+            </button>
+          `).join('')}
+        </div>
+        <textarea id="postText" class="w-full h-40 bg-black border border-white/10 rounded-xl p-4 text-white placeholder-neutral-700 focus:outline-none focus:border-teal-500 transition-colors resize-none mb-6" placeholder="Speak into the silence..."></textarea>
+        <button onclick="submitPost()" class="w-full py-4 bg-teal-600 hover:bg-teal-500 text-black font-bold rounded-xl transition-all tracking-widest uppercase">Release</button>
+        <button onclick="navigateTo('home')" class="w-full mt-4 text-neutral-600 text-xs uppercase">Cancel</button>
+      </div>
+    `;
+
+    const ViewReply = () => `
+      <div class="fade-in h-full flex flex-col">
+        <div class="flex justify-center flex-wrap gap-3 mb-6 border-b border-white/5 pb-4">
+          ${['all', 'general', 'love', 'work', 'family', 'life'].map(r => `
+             <button onclick="filterReplyRoom('${r}')" class="filter-btn text-xs uppercase tracking-widest ${currentFilter === r ? 'text-teal-400' : 'text-neutral-500 hover:text-white'}" id="filter-${r}">${r}</button>
+          `).join('')}
+        </div>
+        <div id="randomPost" class="flex-1 flex flex-col justify-center">
+          <div class="text-center animate-pulse text-neutral-500">Searching the void...</div>
+        </div>
+        <button onclick="navigateTo('home')" class="mt-8 text-center text-neutral-600 text-xs uppercase">Return Home</button>
+      </div>
+    `;
+
+    const ViewMyRoom = () => `
+      <div class="fade-in pb-20">
+        <h2 class="text-xl font-light text-white mb-2 tracking-wide text-center">MY ROOM</h2>
+        <div class="flex justify-center gap-8 mb-8 text-xs uppercase tracking-widest border-b border-white/10">
+          <button onclick="switchRoomTab('my-posts')" class="pb-3 ${state.roomTab === 'my-posts' ? 'text-teal-400 border-b border-teal-400' : 'text-neutral-500'}">My Whispers</button>
+          <button onclick="switchRoomTab('joined')" class="pb-3 ${state.roomTab === 'joined' ? 'text-teal-400 border-b border-teal-400' : 'text-neutral-500'}">Joined</button>
+        </div>
+        <div id="roomContent" class="space-y-6">
+           <div class="text-center text-neutral-600 mt-12">Accessing archives...</div>
+        </div>
+        <button onclick="navigateTo('home')" class="w-full mt-12 text-neutral-600 text-xs uppercase">Exit Room</button>
+      </div>
+    `;
+    
+    const ViewAdmin = () => `
+      <div class="fade-in bg-red-900/10 p-4 rounded-xl min-h-screen">
+        <h2 class="text-red-500 font-bold mb-4">ADMIN DASHBOARD</h2>
+        <input type="text" id="adminKey" placeholder="Enter Key" class="bg-black border border-red-900 p-2 rounded text-white mb-4 w-full">
+        <button onclick="loadAdmin()" class="bg-red-900 text-white px-4 py-2 rounded w-full mb-8">Login</button>
+        <div id="adminContent" class="space-y-4"></div>
+      </div>
+    `;
+
+    // --- RE-INSERT ALL LOGIC FUNCTIONS (selectMood, submitPost, renderChatCard, etc) ---
+    // (Copy these from your original file, they don't need changing, just ensure they are here)
+    
+    let selectedMood = null;
+    let selectedRoom = 'general';
+    let currentFilter = 'all';
+
+    function selectMood(m) {
+      selectedMood = m;
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('bg-teal-900', 'border-teal-500'));
+      document.querySelector(`button[data-mood="${m}"]`).classList.add('bg-teal-900', 'border-teal-500');
+    }
+
+    function selectRoom(r) {
+      selectedRoom = r;
+      document.querySelectorAll('.room-btn').forEach(b => {
+        b.classList.remove('border-teal-500', 'text-teal-500');
+        b.classList.add('text-neutral-400');
+      });
+      const btn = document.querySelector(`button[data-room="${r}"]`);
+      if(btn) {
+          btn.classList.add('border-teal-500', 'text-teal-500');
+          btn.classList.remove('text-neutral-400');
+      }
+    }
+    
+    function filterReplyRoom(r) {
+      currentFilter = r;
+      document.querySelectorAll('.filter-btn').forEach(b => b.className = "filter-btn text-xs uppercase tracking-widest text-neutral-500 hover:text-white");
+      const btn = document.getElementById(`filter-${r}`);
+      if(btn) btn.className = "filter-btn text-xs uppercase tracking-widest text-teal-400";
+      loadRandomReply();
+    }
+
+    async function submitPost() {
+      const text = document.getElementById("postText").value;
+      if (!selectedMood || !text) return alert("Please select a mood and write.");
+      const res = await api.post('/api/post', { mood: selectedMood, text, room: selectedRoom });
+      if (res && res.error) alert(res.error);
+      else if (res) { 
+        alert("Released."); 
+        refreshPoints();
+        navigateTo('home'); 
+      }
+    }
+
+    async function refreshPoints() {
+      const res = await api.get('/api/me');
+      if(res) document.getElementById('lightPoints').innerText = res.lightPoints || 0;
+    }
+    
+    async function loadRandomReply() {
+      const container = document.getElementById('randomPost');
+      if(!container) return;
+      container.innerHTML = `<div class="text-center animate-pulse text-neutral-500">Searching...</div>`;
+      const post = await api.get(`/api/post/random?room=${currentFilter}`);
+      
+      if (!post) {
+        container.innerHTML = `<div class="text-center text-neutral-500">The void is silent in this room.<br>No one needs help right now.</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="bg-white/5 border border-white/10 p-6 rounded-2xl relative overflow-hidden group">
+           <div class="absolute top-0 left-0 w-1 h-full bg-teal-500/50"></div>
+           <div class="flex justify-between items-center mb-4">
+             <div class="text-3xl flex items-center gap-2">
+                ${emojis[post.mood] || ''} 
+                <span class="text-xs uppercase text-teal-500 tracking-widest border border-teal-500/30 px-2 py-1 rounded">${post.room || 'general'}</span>
+             </div>
+             <button onclick="report('post', '${post._id}')" class="text-red-900 hover:text-red-500 text-[10px] uppercase">Report</button>
+           </div>
+           <p class="text-lg text-neutral-200 font-light leading-relaxed">"${post.text}"</p>
+        </div>
+        
+        <div class="mt-6">
+          <textarea id="replyText" class="w-full h-32 bg-black border border-white/10 rounded-xl p-4 text-white focus:border-purple-500 focus:outline-none resize-none" placeholder="Send warmth..."></textarea>
+          <div class="flex gap-2 mt-4">
+            <button onclick="submitReply('${post._id}')" class="flex-1 py-3 bg-purple-900/50 hover:bg-purple-800 text-purple-200 border border-purple-500/30 rounded-xl transition-all">SEND</button>
+            <button onclick="loadRandomReply()" class="px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-400">Skip</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function submitReply(postId) {
+      const text = document.getElementById("replyText").value;
+      if (!text) return;
+      await api.post('/api/reply', { postId, text });
+      alert("Kindness sent.");
+      refreshPoints();
+      loadRandomReply();
+    }
+    
+    function switchRoomTab(tab) {
+      state.roomTab = tab;
+      loadRoomData();
+      render();
+    }
+    
+    async function loadRoomData() {
+      const data = await api.get('/api/my-room');
+      const container = document.getElementById('roomContent');
+      if(!data || !container) return;
+      
+      container.innerHTML = "";
+
+      if (state.roomTab === 'my-posts') {
+        if (!data.myPosts.length) {
+          container.innerHTML = `<div class="text-center text-neutral-600 mt-12">You haven't whispered yet.</div>`;
+          return;
+        }
+        data.myPosts.forEach(p => { container.innerHTML += renderChatCard(p, true); });
+      } else {
+        if (!data.myInteractions.length) {
+          container.innerHTML = `<div class="text-center text-neutral-600 mt-12">You haven't replied to anyone yet.</div>`;
+          return;
+        }
+        data.myInteractions.forEach(interaction => {
+           const postWithReplies = { ...interaction.post, replies: interaction.allReplies };
+           container.innerHTML += renderChatCard(postWithReplies, false);
+        });
+      }
+    }
+
+    function renderChatCard(post, isMyPost) {
+       // ... (Same as original renderChatCard function)
+       // For brevity, using the previous logic:
+       return `
+        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-6 shadow-lg">
+            <div class="p-4 border-b border-white/5 flex justify-between items-start bg-black/40">
+              <div>
+                <span class="text-${isMyPost ? 'teal' : 'purple'}-500 text-[10px] uppercase tracking-widest mb-1 block">
+                  ${isMyPost ? 'My Whisper' : 'Joined Whisper'} (${post.room || 'general'})
+                </span>
+                <p class="text-neutral-300 text-sm italic">"${post.text}"</p>
+              </div>
+            </div>
+            <div class="p-4 bg-black/20 flex flex-col max-h-64 overflow-y-auto">
+              ${post.replies.map(r => {
+                 let bubbleClass = ''; let label = '';
+                 if (isMyPost) {
+                    if (r.isAuthorReply) { bubbleClass = 'chat-me'; label = 'Me'; }
+                    else { bubbleClass = 'chat-them'; label = 'Stranger'; }
+                 } else {
+                    if (r.isAuthorReply) { bubbleClass = 'chat-them border-teal-500/30 text-teal-200'; label = 'Author'; }
+                    else { bubbleClass = 'chat-me border-purple-500/30 text-purple-200'; label = 'You/Stranger'; }
+                 }
+                 return `<div class="flex flex-col ${bubbleClass.includes('chat-me') ? 'items-end' : 'items-start'}">
+                     <div class="chat-bubble ${bubbleClass}">${r.text}</div>
+                     <span class="text-[9px] text-neutral-600 mb-2 px-1">${label}</span>
+                   </div>`;
+              }).join('')}
+              ${!post.replies.length ? '<div class="text-xs text-neutral-600 text-center my-4">No replies yet.</div>' : ''}
+            </div>
+            <div class="p-3 bg-black/40 border-t border-white/5 flex gap-2">
+                 <input id="reply-input-${post._id}" placeholder="Continue conversation..." class="flex-1 bg-transparent text-xs p-2 text-white outline-none placeholder-neutral-600">
+                 <button onclick="subReply('${post._id}')" class="text-xs text-teal-500 font-bold uppercase hover:text-white transition-colors">SEND</button>
+            </div>
+        </div>
+      `;
+    }
+
+    async function subReply(postId) {
+       const txt = document.getElementById(`reply-input-${postId}`).value;
+       if(txt) {
+         await api.post('/api/reply', { postId, text: txt });
+         document.getElementById(`reply-input-${postId}`).value = "";
+         loadRoomData();
+       }
+    }
+    
+    async function report(type, id) {
+      if(confirm("Report this as abusive?")) {
+        await api.post('/api/report', { type, id });
+        alert("Flagged for review.");
+        navigateTo('home');
+      }
+    }
+    
+    function openAdmin() { navigateTo('admin'); }
+    async function loadAdmin() {
+      const key = document.getElementById('adminKey').value;
+      const res = await api.get(`/api/admin/dashboard?key=${key}`);
+      const div = document.getElementById('adminContent');
+      if(res && res.error) { div.innerHTML = "Access Denied"; return; }
+      if(res) {
+          div.innerHTML = `<h3 class="text-white border-b border-white/10 pb-2">Flagged Posts</h3>`;
+          res.flaggedPosts.forEach(p => {
+            div.innerHTML += `
+              <div class="bg-black border border-red-900 p-2 text-xs mb-2">
+                <div class="text-red-300">Reports: ${p.reports}</div>
+                <div class="text-white mb-2">${p.text}</div>
+                <button onclick="banUser('${p.authorToken}', '${key}')" class="bg-red-600 text-white px-2 py-1">BAN USER</button>
+              </div>
+            `;
+          });
+      }
+    }
+    
+    async function banUser(token, key) {
+      if(confirm("Ban user forever?")) {
+        await fetch('/api/admin/ban?key='+key, { 
+          method: 'DELETE', 
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ token, deleteContent: true })
+        });
+        alert("Banned.");
+        loadAdmin();
+      }
+    }
+
+    // --- MAIN RENDER ---
+  function render() {
+      const app = document.getElementById("app");
+      const backBtn = document.getElementById("backBtn");
+
+      // Handle Back Button Visibility
+      if (state.page === 'home' || state.page === 'landing') {
+        backBtn.classList.add('hidden');
+      } else {
+        backBtn.classList.remove('hidden');
+      }
+
+      // Render Views
+      if (state.page === 'landing') app.innerHTML = ViewLanding();
+      else if (state.page === 'home') app.innerHTML = ViewHome();
+      else if (state.page === 'write') app.innerHTML = ViewWrite();
+      else if (state.page === 'reply') { app.innerHTML = ViewReply(); loadRandomReply(); }
+      else if (state.page === 'myroom') { app.innerHTML = ViewMyRoom(); loadRoomData(); }
+      else if (state.page === 'admin') app.innerHTML = ViewAdmin();
+      
+      if(state.page !== 'landing') refreshPoints();
+    }
+
+    // Audio Logic
+    const audio = document.getElementById('ambientAudio');
+    audio.volume = 0.3;
+    function toggleSound() {
+      if (state.audioPlaying) { audio.pause(); document.getElementById('soundBtn').innerText = "🔇 Sound Off"; }
+      else { audio.play(); document.getElementById('soundBtn').innerText = "🔊 Sound On"; }
+      state.audioPlaying = !state.audioPlaying;
+    }
+
+    // Init
+    render(); 
+</script>
+</body>
+</html>
