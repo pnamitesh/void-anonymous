@@ -286,7 +286,15 @@ app.delete("/api/admin/ban", async (req, res) => {
 app.use(express.static(path.join(__dirname, "../frontend")));
 app.get("*", (req, res) => res.sendFile(path.join(__dirname, "../frontend/index.html")));
 
-const PORT = process.env.PORT || 3000;
+// const PORT = process.env.PORT || 3000;
 // app.listen(PORT, () => console.log(`🌑 VOID Online: http://localhost:${PORT}`));
 
-module.exports = app;
+
+// Export the Express API for Vercel Serverless
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`🌑 VOID Online: http://localhost:${PORT}`));
+}
+
+export default app;
+
