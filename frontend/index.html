@@ -3,87 +3,202 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VOID Rooms</title>
+  <title>VOID Anonymous</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Immersion & Animation */
-    body { background: #000; color: #a1a1aa; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-    
-    .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.3; background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjEiIGZpbGw9IndoaXRlIiAvPjwvc3ZnPg=='); animation: drift 60s linear infinite; }
-    @keyframes drift { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
-    
-    .fade-in { animation: fadeIn 0.6s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600&display=swap');
 
-    .glow-text { text-shadow: 0 0 10px rgba(45, 212, 191, 0.5); }
+    /* --- BASE AESTHETICS --- */
+    body { 
+        background-color: #000;
+        background-image: radial-gradient(circle at center, #111827 0%, #000000 100%);
+        color: #e4e4e7; 
+        font-family: 'Inter', sans-serif; 
+        overflow-x: hidden; 
+        min-height: 100vh;
+    }
     
+    /* Subtle Grain Texture */
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    /* Star/Dust Particles */
+    .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.4; background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjEiIGZpbGw9IndoaXRlIiAvPjwvc3ZnPg=='); animation: drift 120s linear infinite; }
+    @keyframes drift { from { background-position: 0 0; } to { background-position: -1000px -1000px; } }
+    
+    /* Animations */
+    .fade-in { animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .glow-text { text-shadow: 0 0 20px rgba(45, 212, 191, 0.3); }
+    .glow-text-purple { text-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
+
+    /* Glass Utilities */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .glass-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    .glass-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+
     /* Chat Bubbles */
-    .chat-bubble { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; margin-bottom: 8px; }
-    .chat-me { background: rgba(45, 212, 191, 0.15); color: #ccfbf1; border: 1px solid rgba(45, 212, 191, 0.3); align-self: flex-end; border-bottom-right-radius: 2px; }
-    .chat-them { background: rgba(255, 255, 255, 0.08); color: #e4e4e7; border: 1px solid rgba(255, 255, 255, 0.1); align-self: flex-start; border-bottom-left-radius: 2px; }
+    .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; line-height: 1.5; margin-bottom: 8px; position: relative; }
+    .chat-me { 
+        background: linear-gradient(135deg, rgba(45, 212, 191, 0.1), rgba(45, 212, 191, 0.05)); 
+        color: #ccfbf1; 
+        border: 1px solid rgba(45, 212, 191, 0.2); 
+        align-self: flex-end; 
+        border-bottom-right-radius: 4px; 
+    }
+    .chat-them { 
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)); 
+        color: #e4e4e7; 
+        border: 1px solid rgba(255, 255, 255, 0.08); 
+        align-self: flex-start; 
+        border-bottom-left-radius: 4px; 
+    }
+
+    /* --- NEW ADDITIONS: NOTIFICATIONS & SPINNERS --- */
     
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-    ::-webkit-scrollbar-track { background: #000; }
+    /* Custom Toast Notification Area */
+    #notification-area {
+        position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+        z-index: 9999; display: flex; flex-direction: column; gap: 10px;
+        width: 90%; max-width: 350px; pointer-events: none;
+    }
+    .void-toast {
+        background: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(45, 212, 191, 0.3);
+        color: #ccfbf1;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(45, 212, 191, 0.15);
+        animation: slideInToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        pointer-events: auto;
+    }
+    .void-toast.error {
+        border-color: rgba(239, 68, 68, 0.5);
+        color: #fecaca;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+    }
+    @keyframes slideInToast {
+        from { opacity: 0; transform: translateY(-20px) scale(0.9); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes fadeOutToast {
+        to { opacity: 0; transform: translateY(-10px); }
+    }
+
+    /* Loading Spinner */
+    .spinner {
+        width: 16px; height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #2dd4bf;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+    }
+    .spinner-lg {
+        width: 40px; height: 40px;
+        border-width: 3px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
   </style>
 </head>
-<body class="antialiased">
+<body class="antialiased selection:bg-teal-500/30 selection:text-teal-200">
 
   <audio id="ambientAudio" loop>
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_34d1979207.mp3?filename=space-ambience-10875.mp3" type="audio/mpeg">
+     <source src="https://archive.org/download/SpaceAmbience/SpaceAmbience.mp3" type="audio/mpeg">
   </audio>
+
+  <div id="notification-area"></div>
 
   <div class="particles"></div>
 
-  <!-- <nav class="fixed top-0 w-full z-50 p-4 flex justify-between items-center bg-black/80 backdrop-blur-md border-b border-white/5">
-    <div onclick="navigateTo('home')" class="cursor-pointer text-lg tracking-widest text-teal-500 font-light uppercase glow-text">Void Rooms</div>
+  <nav class="fixed top-0 w-full z-50 p-6 flex justify-between items-center bg-black/50 backdrop-blur-xl border-b border-white/5 transition-all">
     <div class="flex items-center gap-4">
-      <button onclick="toggleSound()" id="soundBtn" class="text-xs text-neutral-500 hover:text-white uppercase tracking-wider">🔇 Sound Off</button>
-      <div class="flex items-center gap-1 text-yellow-500/80 text-sm">
-        <span>✦</span> <span id="lightPoints">0</span>
-      </div>
-    </div>
-  </nav> -->
-
-  <nav class="fixed top-0 w-full z-50 p-4 flex justify-between items-center bg-black/80 backdrop-blur-md border-b border-white/5 transition-all">
-    <div class="flex items-center gap-3">
-      <button id="backBtn" onclick="navigateTo('home')" class="hidden text-white hover:text-teal-400 text-xl transition-colors">
-        ←
+      <button id="backBtn" onclick="navigateTo('home')" class="hidden text-white/50 hover:text-teal-400 text-xl transition-colors transform hover:-translate-x-1">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
       </button>
       
-      <div onclick="navigateTo('home')" class="cursor-pointer text-lg tracking-widest text-teal-500 font-light uppercase glow-text">Void Anonymous</div>
+      <div onclick="navigateTo('home')" class="cursor-pointer group">
+         <div class="text-xl tracking-[0.2em] text-teal-500 font-extralight uppercase glow-text group-hover:text-teal-400 transition-colors">Void<span class="text-white/50">Anonymous</span></div>
+      </div>
     </div>
 
-    <div class="flex items-center gap-4">
-      <!-- <button onclick="toggleSound()" id="soundBtn" class="text-xs text-neutral-500 hover:text-white uppercase tracking-wider">🔇 Sound Off</button> -->
-      <div class="flex items-center gap-1 text-yellow-500/80 text-sm">
-        <span>✦</span> <span id="lightPoints">0</span>
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5">
+        <span class="text-yellow-500/80 animate-pulse">✦</span> 
+        <span id="lightPoints" class="text-sm font-mono text-neutral-300">0</span>
       </div>
     </div>
   </nav>
   
-  <div id="app" class="max-w-lg mx-auto min-h-screen pt-24 px-4 pb-24 relative z-10"></div>
+  <div id="app" class="max-w-xl mx-auto min-h-screen pt-32 px-6 pb-24 relative z-10 flex flex-col justify-center"></div>
 
-  <div class="fixed bottom-2 right-2 opacity-10 hover:opacity-100 transition-opacity">
-    <button onclick="openAdmin()" class="text-[10px] text-red-900">Admin</button>
+  <div class="fixed bottom-4 right-4 z-50 opacity-20 hover:opacity-100 transition-opacity">
+    <button onclick="openAdmin()" class="text-[10px] text-red-900 hover:text-red-500 uppercase tracking-widest font-bold">System</button>
   </div>
 
   <script>
+    // --- NOTIFICATION UTILS ---
+    function notify(message, type = 'success') {
+        const container = document.getElementById('notification-area');
+        const toast = document.createElement('div');
+        toast.className = `void-toast ${type === 'error' ? 'error' : ''}`;
+        toast.innerText = message;
+        container.appendChild(toast);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'fadeOutToast 0.5s forwards';
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+
     // --- STATE ---
     let state = { page: 'landing', userPoints: 0, audioPlaying: false, roomTab: 'my-posts' };
     const emojis = { sad: "😢", confused: "😕", heartbroken: "💔", anxious: "😰", angry: "😠", lost: "🌌", numb: "😶" };
     
-    // --- KEY MANAGEMENT (THE NEW AUTH) ---
+    // --- KEY MANAGEMENT ---
     const KEY_STORAGE_NAME = 'void_secret_key';
     let myVoidKey = localStorage.getItem(KEY_STORAGE_NAME);
 
-    // If we have a key, skip to home. If not, stay on landing.
     if (myVoidKey) state.page = 'home';
 
     function generateVoidKey() {
-      // Create a random robust key: VOID-XXXX-XXXX-XXXX
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 to avoid confusion
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; 
       let key = 'VOID';
       for (let i = 0; i < 3; i++) {
         key += '-';
@@ -93,10 +208,11 @@
     }
 
     function login(key) {
-      if (!key || key.length < 10) return alert("Invalid Key format.");
+      if (!key || key.length < 10) return notify("Invalid Key format.", 'error');
       myVoidKey = key;
       localStorage.setItem(KEY_STORAGE_NAME, key);
       navigateTo('home');
+      notify("Identity Recognized");
     }
 
     function logout() {
@@ -109,24 +225,28 @@
 
     function copyKey() {
       navigator.clipboard.writeText(myVoidKey);
-      alert("Key copied to clipboard. Keep it safe.");
+      notify("Key copied to clipboard. Keep it safe.");
     }
 
-    // --- API (UPDATED WITH HEADERS) ---
+    // --- API ---
     const api = {
       get: async (url) => {
-        const res = await fetch(url, { headers: { 'x-void-key': myVoidKey } });
-        if (res.status === 401) { logout(); return null; }
-        return res.json();
+        try {
+            const res = await fetch(url, { headers: { 'x-void-key': myVoidKey } });
+            if (res.status === 401) { logout(); return null; }
+            return res.json();
+        } catch(e) { notify("Connection Lost", "error"); return null; }
       },
       post: async (url, body) => {
-        const res = await fetch(url, { 
-          method: 'POST', 
-          headers: {'Content-Type': 'application/json', 'x-void-key': myVoidKey}, 
-          body: JSON.stringify(body) 
-        });
-        if (res.status === 401) { logout(); return null; }
-        return res.json();
+        try {
+            const res = await fetch(url, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json', 'x-void-key': myVoidKey}, 
+            body: JSON.stringify(body) 
+            });
+            if (res.status === 401) { logout(); return null; }
+            return res.json();
+        } catch(e) { notify("Transmission Failed", "error"); return null; }
       },
     };
 
@@ -139,33 +259,40 @@
 
     // --- VIEWS ---
 
-    // 1. NEW LANDING / LOGIN SCREEN
+    // 1. LANDING
     const ViewLanding = () => `
-      <div class="flex flex-col h-screen justify-center items-center fade-in px-6 relative z-20">
-        <h1 class="text-6xl font-thin text-white mb-2 tracking-tighter glow-text">VOID</h1>
-        <p class="text-teal-500/50 text-xs tracking-[0.5em] uppercase mb-12">Anonymous Identity System</p>
+      <div class="flex flex-col h-[80vh] justify-center items-center fade-in relative z-20">
+        <div class="relative mb-12 group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-teal-600 to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+            <h1 class="relative text-7xl md:text-8xl font-thin text-white tracking-tighter glow-text select-none">VOID</h1>
+        </div>
+        <p class="text-teal-500/40 text-xs tracking-[0.8em] uppercase mb-16 border-b border-teal-500/20 pb-4">Anonymous Identity System</p>
 
-        <div class="w-full max-w-sm space-y-8">
+        <div class="w-full max-w-sm space-y-8 glass-panel p-8 rounded-2xl">
           
-          <div class="bg-white/5 border border-white/10 p-6 rounded-xl text-center">
-            <h3 class="text-white text-lg font-light mb-2">New Arrival?</h3>
-            <p class="text-neutral-500 text-xs mb-4">Generate a secret key. This key IS your identity.</p>
-            <button onclick="let k = generateVoidKey(); login(k); alert('Your Key is: ' + k + '\\n\\nSave this somewhere safe!');" class="w-full py-3 bg-teal-600 hover:bg-teal-500 text-black font-bold rounded-lg transition-all uppercase tracking-widest text-sm">
-              Generate Identity
+          <div class="text-center">
+            <h3 class="text-white text-lg font-light mb-1 tracking-wide">New Arrival</h3>
+            <p class="text-neutral-500 text-xs mb-6 font-light">Generate a secret key. This key is your only identity.</p>
+            <button onclick="let k = generateVoidKey(); login(k); notify('Key generated. Save it immediately.'); alert('Your Key is: ' + k + '\\n\\nSave this somewhere safe!');" class="w-full py-4 bg-teal-500/10 hover:bg-teal-500 hover:text-black border border-teal-500/50 text-teal-400 font-bold rounded-lg transition-all uppercase tracking-[0.2em] text-xs shadow-[0_0_20px_rgba(20,184,166,0.1)] hover:shadow-[0_0_30px_rgba(20,184,166,0.6)]">
+              Initialize Identity
             </button>
           </div>
 
-          <div class="flex items-center justify-center gap-4 opacity-50">
-            <div class="h-[1px] bg-white/20 w-full"></div>
-            <span class="text-xs text-neutral-500 uppercase">OR</span>
-            <div class="h-[1px] bg-white/20 w-full"></div>
+          <div class="flex items-center justify-center gap-4 opacity-30">
+            <div class="h-[1px] bg-white w-full"></div>
+            <span class="text-[10px] text-white uppercase tracking-widest">OR</span>
+            <div class="h-[1px] bg-white w-full"></div>
           </div>
 
           <div class="text-center">
-            <p class="text-neutral-400 text-xs mb-3 uppercase tracking-widest">Recover Existing Room</p>
-            <input type="text" id="loginKeyInput" placeholder="Paste your VOID-KEY..." class="w-full bg-black border border-white/20 p-3 rounded-lg text-white text-center tracking-widest uppercase mb-3 focus:border-teal-500 outline-none">
-            <button onclick="login(document.getElementById('loginKeyInput').value)" class="w-full py-3 border border-white/20 hover:bg-white/5 text-white rounded-lg transition-all uppercase text-xs tracking-widest">
-              Enter Void
+            <p class="text-neutral-500 text-[10px] mb-3 uppercase tracking-widest">Recover Existing Room</p>
+            <div class="relative group">
+                <input type="text" id="loginKeyInput" placeholder="PASTE VOID-KEY" class="w-full bg-black/50 border border-white/10 p-4 rounded-lg text-white text-center tracking-[0.2em] uppercase text-xs focus:border-teal-500/50 focus:bg-black focus:outline-none transition-all placeholder-neutral-700">
+                <div class="absolute inset-0 border border-teal-500/0 rounded-lg pointer-events-none group-hover:border-teal-500/20 transition-all"></div>
+            </div>
+            <button onclick="login(document.getElementById('loginKeyInput').value)" class="mt-4 w-full py-3 text-neutral-400 hover:text-white text-xs uppercase tracking-widest transition-colors flex justify-center items-center gap-2 group">
+              <span>Enter The Void</span>
+              <span class="group-hover:translate-x-1 transition-transform">→</span>
             </button>
           </div>
 
@@ -173,108 +300,137 @@
       </div>
     `;
 
+    // 2. HOME
     const ViewHome = () => `
-      <div class="flex flex-col h-[75vh] justify-center items-center fade-in text-center relative z-20">
+      <div class="flex flex-col h-full justify-center items-center fade-in text-center relative z-20 pt-10">
         <div class="absolute top-0 right-0 p-4">
-            <button onclick="logout()" class="text-[10px] text-red-900 hover:text-red-500 uppercase tracking-widest">Logout</button>
+            <button onclick="logout()" class="text-[10px] text-red-900 hover:text-red-500 uppercase tracking-widest border border-red-900/30 px-3 py-1 rounded hover:bg-red-900/10 transition-colors">Disconnect</button>
         </div>
         
-        <div class="mb-8">
-          <h1 class="text-6xl font-thin text-white mb-2 tracking-tighter glow-text">VOID</h1>
-          <div onclick="copyKey()" class="cursor-pointer group flex flex-col items-center">
-             <p class="text-teal-500/50 text-xs tracking-[0.2em] uppercase group-hover:text-teal-400 transition-colors">ID: ${myVoidKey ? myVoidKey.substring(0,9)+'...' : 'Loading'}</p>
-             <span class="text-[9px] text-neutral-600 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest mt-1">Click to Copy Key</span>
+        <div class="mb-12 relative">
+          <div class="absolute -inset-4 bg-teal-500/5 rounded-full blur-xl"></div>
+          <h1 class="relative text-6xl font-thin text-white mb-2 tracking-tighter glow-text">VOID</h1>
+          <div onclick="copyKey()" class="cursor-pointer group flex flex-col items-center relative z-10">
+             <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/5 group-hover:border-teal-500/30 transition-all">
+                <div class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></div>
+                <p class="text-teal-200/70 text-[10px] tracking-[0.2em] uppercase font-mono">ID: ${myVoidKey ? myVoidKey.substring(0,9)+'...' : 'Loading'}</p>
+             </div>
+             <span class="text-[9px] text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest mt-2 transform translate-y-2 group-hover:translate-y-0 duration-300">Click to Copy Key</span>
           </div>
         </div>
 
-        <div class="w-full space-y-4 max-w-xs">
-          <button onclick="navigateTo('write')" class="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-teal-200 transition-all group">
-            <span class="group-hover:tracking-widest transition-all duration-500">RELEASE PAIN</span>
+        <div class="w-full space-y-6 max-w-sm">
+          <button onclick="navigateTo('write')" class="w-full group relative overflow-hidden p-6 glass-panel rounded-2xl text-left transition-all hover:border-teal-500/30">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            </div>
+            <h3 class="text-xl text-white font-light tracking-wide mb-1 group-hover:text-teal-300 transition-colors">Release Pain</h3>
+            <p class="text-xs text-neutral-400 font-light tracking-wide group-hover:text-neutral-300">Speak into the silence. Be heard.</p>
           </button>
           
-          <button onclick="navigateTo('reply')" class="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-purple-300 transition-all group">
-             <span class="group-hover:tracking-widest transition-all duration-500">SEND LIGHT</span>
+          <button onclick="navigateTo('reply')" class="w-full group relative overflow-hidden p-6 glass-panel rounded-2xl text-left transition-all hover:border-purple-500/30">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+            </div>
+            <h3 class="text-xl text-white font-light tracking-wide mb-1 group-hover:text-purple-300 transition-colors">Send Light</h3>
+            <p class="text-xs text-neutral-400 font-light tracking-wide group-hover:text-neutral-300">Comfort a stranger in the dark.</p>
           </button>
           
-          <button onclick="navigateTo('myroom')" class="w-full py-4 text-neutral-500 hover:text-white text-xs uppercase tracking-widest transition-all">
-            Enter My Room
+          <button onclick="navigateTo('myroom')" class="w-full py-4 text-neutral-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-all border-t border-transparent hover:border-white/10 mt-8">
+              Access Personal Archives
           </button>
         </div>
       </div>
     `;
 
-    // (Keep ViewWrite, ViewReply, ViewMyRoom, ViewAdmin mostly the same, 
-    // just ensure they call the updated 'api' object defined above)
-    
-    // ... [Insert the rest of your Views from the previous file here: ViewWrite, ViewReply, ViewMyRoom, ViewAdmin] ...
-    
-    /* NOTE: Paste the Views (ViewWrite, ViewReply, etc) exactly as they were in your uploaded file here.
-       The only critical change was adding ViewLanding and updating ViewHome.
-    */
-
+    // 3. WRITE
     const ViewWrite = () => `
       <div class="fade-in">
-        <h2 class="text-2xl font-light text-white mb-6 text-center">Release your burden</h2>
-        <div class="mb-6 text-center">
-          <label class="text-[10px] text-neutral-500 uppercase tracking-widest mb-3 block">Select Topic</label>
-          <div class="flex flex-wrap gap-2 justify-center">
-            ${['general', 'love', 'work', 'family', 'life'].map(r => `
-              <button onclick="selectRoom('${r}')" class="room-btn px-4 py-2 rounded-full border border-white/10 bg-black text-xs text-neutral-400 hover:border-teal-500 hover:text-teal-500 transition-all uppercase ${selectedRoom === r ? 'border-teal-500 text-teal-500' : ''}" data-room="${r}">${r}</button>
-            `).join('')}
-          </div>
+        <h2 class="text-3xl font-thin text-white mb-8 text-center tracking-tight glow-text">Release Burden</h2>
+        
+        <div class="glass-panel p-6 rounded-2xl mb-6">
+            <div class="mb-8 text-center">
+              <label class="text-[10px] text-teal-500/70 uppercase tracking-[0.2em] mb-4 block">Choose Frequency</label>
+              <div class="flex flex-wrap gap-2 justify-center">
+                ${['general', 'love', 'work', 'family', 'life'].map(r => `
+                  <button onclick="selectRoom('${r}')" class="room-btn px-4 py-2 rounded-full border border-white/5 bg-black/20 text-[10px] text-neutral-400 hover:border-teal-500/50 hover:text-white hover:bg-teal-500/10 transition-all uppercase tracking-widest ${selectedRoom === r ? 'border-teal-500 text-teal-300 bg-teal-500/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : ''}" data-room="${r}">${r}</button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-3 mb-8">
+              ${Object.keys(emojis).map(m => `
+                <button onclick="selectMood('${m}')" class="mood-btn p-3 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-teal-500/50 transition-all flex flex-col items-center gap-2 group" data-mood="${m}">
+                  <span class="text-2xl filter grayscale group-hover:grayscale-0 transition-all duration-300 transform group-hover:scale-110">${emojis[m]}</span>
+                  <span class="text-[8px] uppercase tracking-wider text-neutral-500 group-hover:text-teal-400 filter group-hover:grayscale-0 ${selectedMood === m ? 'text-teal-400' : ''}">${m}</span>
+                </button>
+              `).join('')}
+            </div>
+            
+            <textarea id="postText" class="w-full h-48 bg-black/30 border border-white/10 rounded-xl p-5 text-neutral-200 placeholder-neutral-700 focus:outline-none focus:border-teal-500/50 focus:bg-black/50 transition-all resize-none mb-2 text-sm leading-relaxed" placeholder="Type here. No one knows it's you..."></textarea>
         </div>
-        <div class="grid grid-cols-4 gap-2 mb-6">
-          ${Object.keys(emojis).map(m => `
-            <button onclick="selectMood('${m}')" class="mood-btn p-3 rounded-xl border border-white/5 bg-white/5 hover:bg-teal-900/50 hover:border-teal-500 transition-all text-2xl flex flex-col items-center gap-2" data-mood="${m}">
-              ${emojis[m]} <span class="text-[8px] uppercase tracking-wider text-neutral-400">${m}</span>
-            </button>
-          `).join('')}
+        
+        <div class="flex gap-4">
+             <button onclick="navigateTo('home')" class="w-1/3 py-4 border border-white/10 rounded-xl text-neutral-500 text-xs uppercase hover:text-white hover:bg-white/5 transition-all">Cancel</button>
+             <button id="transmitBtn" onclick="submitPost()" class="w-2/3 py-4 bg-teal-600 hover:bg-teal-500 text-black font-bold rounded-xl transition-all tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(20,184,166,0.3)] flex justify-center items-center gap-2">
+                Transmit
+             </button>
         </div>
-        <textarea id="postText" class="w-full h-40 bg-black border border-white/10 rounded-xl p-4 text-white placeholder-neutral-700 focus:outline-none focus:border-teal-500 transition-colors resize-none mb-6" placeholder="Speak into the silence..."></textarea>
-        <button onclick="submitPost()" class="w-full py-4 bg-teal-600 hover:bg-teal-500 text-black font-bold rounded-xl transition-all tracking-widest uppercase">Release</button>
-        <button onclick="navigateTo('home')" class="w-full mt-4 text-neutral-600 text-xs uppercase">Cancel</button>
       </div>
     `;
 
+    // 4. REPLY
     const ViewReply = () => `
       <div class="fade-in h-full flex flex-col">
-        <div class="flex justify-center flex-wrap gap-3 mb-6 border-b border-white/5 pb-4">
+        <div class="flex justify-center flex-wrap gap-4 mb-8 pb-6 border-b border-white/5">
           ${['all', 'general', 'love', 'work', 'family', 'life'].map(r => `
-             <button onclick="filterReplyRoom('${r}')" class="filter-btn text-xs uppercase tracking-widest ${currentFilter === r ? 'text-teal-400' : 'text-neutral-500 hover:text-white'}" id="filter-${r}">${r}</button>
+              <button onclick="filterReplyRoom('${r}')" class="filter-btn text-[10px] uppercase tracking-widest transition-all ${currentFilter === r ? 'text-teal-400 border-b border-teal-400 pb-1' : 'text-neutral-600 hover:text-white pb-1 border-b border-transparent'}" id="filter-${r}">${r}</button>
           `).join('')}
         </div>
-        <div id="randomPost" class="flex-1 flex flex-col justify-center">
-          <div class="text-center animate-pulse text-neutral-500">Searching the void...</div>
+        
+        <div id="randomPost" class="flex-1 flex flex-col justify-center min-h-[400px]">
+          <div class="flex flex-col items-center gap-4">
+             <div class="spinner spinner-lg"></div>
+             <div class="text-center animate-pulse text-teal-500/50 tracking-widest text-xs uppercase">Scanning frequency...</div>
+          </div>
         </div>
-        <button onclick="navigateTo('home')" class="mt-8 text-center text-neutral-600 text-xs uppercase">Return Home</button>
+        
+        <button onclick="navigateTo('home')" class="mt-8 text-center text-neutral-700 hover:text-neutral-400 text-[10px] uppercase tracking-widest transition-colors">Return to Base</button>
       </div>
     `;
 
+    // 5. MY ROOM
     const ViewMyRoom = () => `
       <div class="fade-in pb-20">
-        <h2 class="text-xl font-light text-white mb-2 tracking-wide text-center">MY ROOM</h2>
-        <div class="flex justify-center gap-8 mb-8 text-xs uppercase tracking-widest border-b border-white/10">
-          <button onclick="switchRoomTab('my-posts')" class="pb-3 ${state.roomTab === 'my-posts' ? 'text-teal-400 border-b border-teal-400' : 'text-neutral-500'}">My Whispers</button>
-          <button onclick="switchRoomTab('joined')" class="pb-3 ${state.roomTab === 'joined' ? 'text-teal-400 border-b border-teal-400' : 'text-neutral-500'}">Joined</button>
+        <h2 class="text-3xl font-thin text-white mb-2 tracking-tight text-center glow-text">Archives</h2>
+        
+        <div class="flex justify-center gap-12 mb-10 text-[10px] uppercase tracking-[0.2em] border-b border-white/5">
+          <button onclick="switchRoomTab('my-posts')" class="pb-4 transition-all ${state.roomTab === 'my-posts' ? 'text-teal-400 border-b border-teal-400' : 'text-neutral-600 hover:text-neutral-300'}">Transmissions</button>
+          <button onclick="switchRoomTab('joined')" class="pb-4 transition-all ${state.roomTab === 'joined' ? 'text-purple-400 border-b border-purple-400' : 'text-neutral-600 hover:text-neutral-300'}">Connections</button>
         </div>
-        <div id="roomContent" class="space-y-6">
-           <div class="text-center text-neutral-600 mt-12">Accessing archives...</div>
+        
+        <div id="roomContent" class="space-y-8 min-h-[200px]">
+           <div class="flex flex-col items-center gap-4 mt-12">
+             <div class="spinner"></div>
+             <div class="text-center text-neutral-700 text-xs uppercase tracking-widest">Decrypting logs...</div>
+           </div>
         </div>
-        <button onclick="navigateTo('home')" class="w-full mt-12 text-neutral-600 text-xs uppercase">Exit Room</button>
+        
+        <button onclick="navigateTo('home')" class="w-full mt-12 text-neutral-700 hover:text-white text-[10px] uppercase tracking-widest transition-colors">Close Archives</button>
       </div>
     `;
     
+    // 6. ADMIN
     const ViewAdmin = () => `
-      <div class="fade-in bg-red-900/10 p-4 rounded-xl min-h-screen">
-        <h2 class="text-red-500 font-bold mb-4">ADMIN DASHBOARD</h2>
-        <input type="text" id="adminKey" placeholder="Enter Key" class="bg-black border border-red-900 p-2 rounded text-white mb-4 w-full">
-        <button onclick="loadAdmin()" class="bg-red-900 text-white px-4 py-2 rounded w-full mb-8">Login</button>
+      <div class="fade-in bg-red-950/20 p-6 rounded-xl min-h-screen border border-red-900/30">
+        <h2 class="text-red-500 font-bold mb-6 tracking-widest uppercase">Admin Terminal</h2>
+        <input type="text" id="adminKey" placeholder="Authorization Code" class="bg-black border border-red-900/50 p-3 rounded text-white mb-4 w-full text-xs font-mono focus:outline-none focus:border-red-500">
+        <button onclick="loadAdmin()" class="bg-red-900/50 hover:bg-red-800 text-red-200 px-4 py-2 rounded w-full mb-8 uppercase text-xs tracking-widest transition-colors">Authenticate</button>
         <div id="adminContent" class="space-y-4"></div>
       </div>
     `;
 
-    // --- RE-INSERT ALL LOGIC FUNCTIONS (selectMood, submitPost, renderChatCard, etc) ---
-    // (Copy these from your original file, they don't need changing, just ensure they are here)
+    // --- LOGIC FUNCTIONS ---
     
     let selectedMood = null;
     let selectedRoom = 'general';
@@ -282,38 +438,54 @@
 
     function selectMood(m) {
       selectedMood = m;
-      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('bg-teal-900', 'border-teal-500'));
-      document.querySelector(`button[data-mood="${m}"]`).classList.add('bg-teal-900', 'border-teal-500');
+      document.querySelectorAll('.mood-btn').forEach(b => {
+        b.classList.remove('border-teal-500', 'bg-white/10');
+        b.querySelector('.filter').classList.add('grayscale');
+        b.querySelector('span:nth-child(2)').classList.remove('text-teal-400');
+      });
+      const btn = document.querySelector(`button[data-mood="${m}"]`);
+      if(btn) {
+          btn.classList.add('border-teal-500', 'bg-white/10');
+          btn.querySelector('.filter').classList.remove('grayscale');
+          btn.querySelector('span:nth-child(2)').classList.add('text-teal-400');
+      }
     }
 
     function selectRoom(r) {
       selectedRoom = r;
       document.querySelectorAll('.room-btn').forEach(b => {
-        b.classList.remove('border-teal-500', 'text-teal-500');
-        b.classList.add('text-neutral-400');
+        b.className = "room-btn px-4 py-2 rounded-full border border-white/5 bg-black/20 text-[10px] text-neutral-400 hover:border-teal-500/50 hover:text-white hover:bg-teal-500/10 transition-all uppercase tracking-widest";
       });
       const btn = document.querySelector(`button[data-room="${r}"]`);
       if(btn) {
-          btn.classList.add('border-teal-500', 'text-teal-500');
-          btn.classList.remove('text-neutral-400');
+          btn.className = "room-btn px-4 py-2 rounded-full border border-teal-500 bg-teal-500/10 text-[10px] text-teal-300 shadow-[0_0_10px_rgba(45,212,191,0.2)] uppercase tracking-widest";
       }
     }
     
     function filterReplyRoom(r) {
       currentFilter = r;
-      document.querySelectorAll('.filter-btn').forEach(b => b.className = "filter-btn text-xs uppercase tracking-widest text-neutral-500 hover:text-white");
-      const btn = document.getElementById(`filter-${r}`);
-      if(btn) btn.className = "filter-btn text-xs uppercase tracking-widest text-teal-400";
-      loadRandomReply();
+      render(); // simplified re-render to update UI
     }
 
     async function submitPost() {
       const text = document.getElementById("postText").value;
-      if (!selectedMood || !text) return alert("Please select a mood and write.");
+      if (!selectedMood || !text) return notify("Please select a mood and write.", 'error');
+      
+      // Loading State
+      const btn = document.getElementById('transmitBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner"></div>`;
+
       const res = await api.post('/api/post', { mood: selectedMood, text, room: selectedRoom });
-      if (res && res.error) alert(res.error);
+      
+      // Restore Button
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+
+      if (res && res.error) notify(res.error, 'error');
       else if (res) { 
-        alert("Released."); 
+        notify("Signal Transmitted."); 
         refreshPoints();
         navigateTo('home'); 
       }
@@ -327,32 +499,44 @@
     async function loadRandomReply() {
       const container = document.getElementById('randomPost');
       if(!container) return;
-      container.innerHTML = `<div class="text-center animate-pulse text-neutral-500">Searching...</div>`;
+      
+      // Spinner is handled by the initial ViewReply render, 
+      // but if we call this manually we reset to spinner:
+      container.innerHTML = `
+          <div class="flex flex-col items-center gap-4">
+             <div class="spinner spinner-lg"></div>
+             <div class="text-center animate-pulse text-teal-500/50 tracking-widest text-xs uppercase">Scanning frequency...</div>
+          </div>`;
+      
       const post = await api.get(`/api/post/random?room=${currentFilter}`);
       
       if (!post) {
-        container.innerHTML = `<div class="text-center text-neutral-500">The void is silent in this room.<br>No one needs help right now.</div>`;
+        container.innerHTML = `<div class="text-center text-neutral-600 border border-white/5 p-8 rounded-2xl border-dashed">The void is silent in this sector.<br><br>No distress signals detected.</div>`;
         return;
       }
 
       container.innerHTML = `
-        <div class="bg-white/5 border border-white/10 p-6 rounded-2xl relative overflow-hidden group">
-           <div class="absolute top-0 left-0 w-1 h-full bg-teal-500/50"></div>
-           <div class="flex justify-between items-center mb-4">
-             <div class="text-3xl flex items-center gap-2">
-                ${emojis[post.mood] || ''} 
-                <span class="text-xs uppercase text-teal-500 tracking-widest border border-teal-500/30 px-2 py-1 rounded">${post.room || 'general'}</span>
+        <div class="glass-panel p-8 rounded-2xl relative overflow-hidden group shadow-2xl animate-[fadeIn_0.5s_ease-out]">
+           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-transparent opacity-50"></div>
+           
+           <div class="flex justify-between items-center mb-6">
+             <div class="flex items-center gap-3">
+                <span class="text-4xl filter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">${emojis[post.mood] || ''}</span>
+                <span class="text-[9px] uppercase text-teal-400 tracking-[0.2em] border border-teal-500/30 px-2 py-1 rounded-sm bg-teal-900/20">${post.room || 'general'}</span>
              </div>
-             <button onclick="report('post', '${post._id}')" class="text-red-900 hover:text-red-500 text-[10px] uppercase">Report</button>
+             <button onclick="report('post', '${post._id}')" class="text-red-900/50 hover:text-red-500 text-[10px] uppercase tracking-widest transition-colors">Report Signal</button>
            </div>
-           <p class="text-lg text-neutral-200 font-light leading-relaxed">"${post.text}"</p>
+           
+           <p class="text-xl text-neutral-100 font-light leading-relaxed font-serif italic opacity-90 mb-8">"${post.text}"</p>
         </div>
         
-        <div class="mt-6">
-          <textarea id="replyText" class="w-full h-32 bg-black border border-white/10 rounded-xl p-4 text-white focus:border-purple-500 focus:outline-none resize-none" placeholder="Send warmth..."></textarea>
-          <div class="flex gap-2 mt-4">
-            <button onclick="submitReply('${post._id}')" class="flex-1 py-3 bg-purple-900/50 hover:bg-purple-800 text-purple-200 border border-purple-500/30 rounded-xl transition-all">SEND</button>
-            <button onclick="loadRandomReply()" class="px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-neutral-400">Skip</button>
+        <div class="mt-8 relative group">
+          <div class="absolute -inset-1 bg-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+          <textarea id="replyText" class="relative w-full h-32 bg-black border border-white/10 rounded-xl p-4 text-white focus:border-purple-500/50 focus:bg-black focus:outline-none resize-none placeholder-neutral-700 text-sm" placeholder="Send a frequency of warmth..."></textarea>
+          
+          <div class="flex gap-3 mt-4 relative z-10">
+            <button id="replyBtn" onclick="submitReply('${post._id}')" class="flex-1 py-4 bg-purple-900/20 hover:bg-purple-600 hover:text-white text-purple-300 border border-purple-500/30 rounded-xl transition-all uppercase tracking-[0.2em] text-xs shadow-[0_0_15px_rgba(168,85,247,0.1)] flex justify-center items-center gap-2">Send Light</button>
+            <button onclick="loadRandomReply()" class="px-6 py-4 border border-white/10 hover:bg-white/5 rounded-xl text-neutral-500 hover:text-white uppercase text-xs tracking-widest transition-all">Skip</button>
           </div>
         </div>
       `;
@@ -360,20 +544,26 @@
 
     async function submitReply(postId) {
       const text = document.getElementById("replyText").value;
-      if (!text) return;
+      if (!text) return notify("Message empty", "error");
+      
+      const btn = document.getElementById('replyBtn');
+      btn.innerHTML = `<div class="spinner"></div>`;
+      btn.disabled = true;
+
       await api.post('/api/reply', { postId, text });
-      alert("Kindness sent.");
+      
+      notify("Light sent through the void.");
       refreshPoints();
       loadRandomReply();
     }
     
     function switchRoomTab(tab) {
       state.roomTab = tab;
-      loadRoomData();
-      render();
+      render(); 
     }
     
     async function loadRoomData() {
+      // Spinner handled by ViewMyRoom initial render
       const data = await api.get('/api/my-room');
       const container = document.getElementById('roomContent');
       if(!data || !container) return;
@@ -382,13 +572,13 @@
 
       if (state.roomTab === 'my-posts') {
         if (!data.myPosts.length) {
-          container.innerHTML = `<div class="text-center text-neutral-600 mt-12">You haven't whispered yet.</div>`;
+          container.innerHTML = `<div class="text-center text-neutral-600 mt-12 italic">The silence is unbroken.<br>You haven't whispered yet.</div>`;
           return;
         }
         data.myPosts.forEach(p => { container.innerHTML += renderChatCard(p, true); });
       } else {
         if (!data.myInteractions.length) {
-          container.innerHTML = `<div class="text-center text-neutral-600 mt-12">You haven't replied to anyone yet.</div>`;
+          container.innerHTML = `<div class="text-center text-neutral-600 mt-12 italic">You haven't connected with anyone yet.</div>`;
           return;
         }
         data.myInteractions.forEach(interaction => {
@@ -399,56 +589,63 @@
     }
 
     function renderChatCard(post, isMyPost) {
-       // ... (Same as original renderChatCard function)
-       // For brevity, using the previous logic:
        return `
-        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-6 shadow-lg">
-            <div class="p-4 border-b border-white/5 flex justify-between items-start bg-black/40">
+        <div class="glass-panel rounded-2xl overflow-hidden mb-8 animate-[fadeIn_0.5s_ease-out]">
+            <div class="p-5 border-b border-white/5 flex justify-between items-start bg-black/20">
               <div>
-                <span class="text-${isMyPost ? 'teal' : 'purple'}-500 text-[10px] uppercase tracking-widest mb-1 block">
-                  ${isMyPost ? 'My Whisper' : 'Joined Whisper'} (${post.room || 'general'})
+                <span class="${isMyPost ? 'text-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.2)]' : 'text-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.2)]'} text-[9px] uppercase tracking-[0.15em] mb-2 inline-block px-2 py-0.5 rounded border ${isMyPost ? 'border-teal-500/30' : 'border-purple-500/30'}">
+                  ${isMyPost ? 'My Signal' : 'Intercepted Signal'} :: ${post.room || 'general'}
                 </span>
-                <p class="text-neutral-300 text-sm italic">"${post.text}"</p>
+                <p class="text-neutral-300 text-sm font-light italic opacity-80 pl-2 border-l-2 ${isMyPost ? 'border-teal-500/30' : 'border-purple-500/30'}">"${post.text}"</p>
               </div>
             </div>
-            <div class="p-4 bg-black/20 flex flex-col max-h-64 overflow-y-auto">
+            
+            <div class="p-5 bg-gradient-to-b from-black/20 to-transparent flex flex-col max-h-80 overflow-y-auto space-y-3">
               ${post.replies.map(r => {
-                 let bubbleClass = ''; let label = '';
-                 if (isMyPost) {
-                    if (r.isAuthorReply) { bubbleClass = 'chat-me'; label = 'Me'; }
-                    else { bubbleClass = 'chat-them'; label = 'Stranger'; }
-                 } else {
-                    if (r.isAuthorReply) { bubbleClass = 'chat-them border-teal-500/30 text-teal-200'; label = 'Author'; }
-                    else { bubbleClass = 'chat-me border-purple-500/30 text-purple-200'; label = 'You/Stranger'; }
-                 }
-                 return `<div class="flex flex-col ${bubbleClass.includes('chat-me') ? 'items-end' : 'items-start'}">
-                     <div class="chat-bubble ${bubbleClass}">${r.text}</div>
-                     <span class="text-[9px] text-neutral-600 mb-2 px-1">${label}</span>
-                   </div>`;
+                  let bubbleClass = ''; let label = '';
+                  if (isMyPost) {
+                     if (r.isAuthorReply) { bubbleClass = 'chat-me'; label = 'Me'; }
+                     else { bubbleClass = 'chat-them'; label = 'Stranger'; }
+                  } else {
+                     if (r.isAuthorReply) { bubbleClass = 'chat-them border-teal-500/20 text-teal-100 bg-teal-900/10'; label = 'Origin'; }
+                     else { bubbleClass = 'chat-me border-purple-500/20 text-purple-100 bg-purple-900/10'; label = 'You'; }
+                  }
+                  return `<div class="flex flex-col ${bubbleClass.includes('chat-me') ? 'items-end' : 'items-start'}">
+                      <div class="chat-bubble ${bubbleClass} backdrop-blur-sm shadow-sm">${r.text}</div>
+                      <span class="text-[9px] text-neutral-600 mb-1 px-2 uppercase tracking-widest">${label}</span>
+                    </div>`;
               }).join('')}
-              ${!post.replies.length ? '<div class="text-xs text-neutral-600 text-center my-4">No replies yet.</div>' : ''}
+              ${!post.replies.length ? '<div class="text-[10px] text-neutral-600 text-center my-4 uppercase tracking-widest">Awaiting response...</div>' : ''}
             </div>
-            <div class="p-3 bg-black/40 border-t border-white/5 flex gap-2">
-                 <input id="reply-input-${post._id}" placeholder="Continue conversation..." class="flex-1 bg-transparent text-xs p-2 text-white outline-none placeholder-neutral-600">
-                 <button onclick="subReply('${post._id}')" class="text-xs text-teal-500 font-bold uppercase hover:text-white transition-colors">SEND</button>
+            
+            <div class="p-3 bg-black/40 border-t border-white/5 flex gap-2 backdrop-blur-md">
+                 <input id="reply-input-${post._id}" placeholder="Transmit response..." class="flex-1 bg-transparent text-xs p-3 text-white outline-none placeholder-neutral-600 focus:placeholder-neutral-500 transition-all">
+                 <button onclick="subReply('${post._id}')" class="text-[10px] text-teal-500 font-bold uppercase hover:text-teal-200 hover:bg-teal-900/30 px-4 rounded transition-all tracking-widest">Send</button>
             </div>
         </div>
       `;
     }
 
     async function subReply(postId) {
-       const txt = document.getElementById(`reply-input-${postId}`).value;
+       const input = document.getElementById(`reply-input-${postId}`);
+       const txt = input.value;
        if(txt) {
+         // Tiny local loading indicator for chat
+         const originalPlaceholder = input.placeholder;
+         input.value = "";
+         input.placeholder = "Transmitting...";
+         
          await api.post('/api/reply', { postId, text: txt });
-         document.getElementById(`reply-input-${postId}`).value = "";
+         
+         input.placeholder = originalPlaceholder;
          loadRoomData();
        }
     }
     
     async function report(type, id) {
-      if(confirm("Report this as abusive?")) {
+      if(confirm("Flag this signal as corrupted/abusive?")) {
         await api.post('/api/report', { type, id });
-        alert("Flagged for review.");
+        notify("Signal flagged for review.");
         navigateTo('home');
       }
     }
@@ -458,15 +655,18 @@
       const key = document.getElementById('adminKey').value;
       const res = await api.get(`/api/admin/dashboard?key=${key}`);
       const div = document.getElementById('adminContent');
-      if(res && res.error) { div.innerHTML = "Access Denied"; return; }
+      if(res && res.error) { div.innerHTML = "<span class='text-red-500'>ACCESS DENIED</span>"; return; }
       if(res) {
-          div.innerHTML = `<h3 class="text-white border-b border-white/10 pb-2">Flagged Posts</h3>`;
+          div.innerHTML = `<h3 class="text-white border-b border-red-900/30 pb-2 mb-4 text-xs uppercase tracking-widest">Flagged Transmissions</h3>`;
           res.flaggedPosts.forEach(p => {
             div.innerHTML += `
-              <div class="bg-black border border-red-900 p-2 text-xs mb-2">
-                <div class="text-red-300">Reports: ${p.reports}</div>
-                <div class="text-white mb-2">${p.text}</div>
-                <button onclick="banUser('${p.authorToken}', '${key}')" class="bg-red-600 text-white px-2 py-1">BAN USER</button>
+              <div class="bg-black/50 border border-red-900/50 p-3 rounded mb-2">
+                <div class="flex justify-between text-[10px] uppercase text-red-400 mb-1">
+                    <span>Reports: ${p.reports}</span>
+                    <span>ID: ${p._id}</span>
+                </div>
+                <div class="text-white text-xs mb-3 italic">"${p.text}"</div>
+                <button onclick="banUser('${p.authorToken}', '${key}')" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-[10px] uppercase tracking-widest w-full">TERMINATE USER</button>
               </div>
             `;
           });
@@ -474,30 +674,28 @@
     }
     
     async function banUser(token, key) {
-      if(confirm("Ban user forever?")) {
+      if(confirm("Permanently disconnect user?")) {
         await fetch('/api/admin/ban?key='+key, { 
           method: 'DELETE', 
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ token, deleteContent: true })
         });
-        alert("Banned.");
+        notify("User terminated.", "error");
         loadAdmin();
       }
     }
 
     // --- MAIN RENDER ---
-  function render() {
+    function render() {
       const app = document.getElementById("app");
       const backBtn = document.getElementById("backBtn");
 
-      // Handle Back Button Visibility
       if (state.page === 'home' || state.page === 'landing') {
         backBtn.classList.add('hidden');
       } else {
         backBtn.classList.remove('hidden');
       }
 
-      // Render Views
       if (state.page === 'landing') app.innerHTML = ViewLanding();
       else if (state.page === 'home') app.innerHTML = ViewHome();
       else if (state.page === 'write') app.innerHTML = ViewWrite();
@@ -508,17 +706,12 @@
       if(state.page !== 'landing') refreshPoints();
     }
 
-    // Audio Logic
+    // Audio
     const audio = document.getElementById('ambientAudio');
-    audio.volume = 0.3;
-    function toggleSound() {
-      if (state.audioPlaying) { audio.pause(); document.getElementById('soundBtn').innerText = "🔇 Sound Off"; }
-      else { audio.play(); document.getElementById('soundBtn').innerText = "🔊 Sound On"; }
-      state.audioPlaying = !state.audioPlaying;
-    }
-
+    audio.volume = 0.2; 
+    
     // Init
     render(); 
-</script>
+  </script>
 </body>
 </html>
