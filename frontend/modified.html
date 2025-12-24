@@ -6,8 +6,6 @@
         toast.className = `void-toast ${type === 'error' ? 'error' : ''}`;
         toast.innerText = message;
         container.appendChild(toast);
-        
-        // Remove after 3 seconds
         setTimeout(() => {
             toast.style.animation = 'fadeOutToast 0.5s forwards';
             setTimeout(() => toast.remove(), 500);
@@ -15,7 +13,7 @@
     }
 
     // --- STATE ---
-    let state = { page: 'landing', userPoints: 0, audioPlaying: false, roomTab: 'my-posts' };
+    let state = { page: 'landing', userPoints: 0, roomTab: 'my-posts' };
     const emojis = { sad: "😢", confused: "😕", heartbroken: "💔", anxious: "😰", angry: "😠", lost: "🌌", numb: "😶" };
     
     // --- KEY MANAGEMENT ---
@@ -52,77 +50,84 @@
 
     function copyKey() {
       navigator.clipboard.writeText(myVoidKey);
-      notify("Key copied to clipboard. Keep it safe.");
+      notify("Key copied to clipboard.");
     }
 
-    // --- API ---
+    // --- REAL API CONNECTION (Talking to server.js) ---
     const api = {
       get: async (url) => {
         try {
-            const res = await fetch(url, { headers: { 'x-void-key': myVoidKey } });
-            if (res.status === 401) { logout(); return null; }
+            // If it's an admin URL, we append the key differently based on your server.js
+            const headers = { 'Content-Type': 'application/json' };
+            if(myVoidKey) headers['x-void-key'] = myVoidKey;
+
+            const res = await fetch(url, { headers });
+            
+            if (res.status === 401) { logout(); return null; } // Invalid Key
+            if (res.status === 204) return null; // No content
             return res.json();
-        } catch(e) { notify("Connection Lost", "error"); return null; }
+        } catch(e) { 
+            console.error(e);
+            notify("Connection Error. Is Server Running?", "error"); 
+            return null; 
+        }
       },
+
       post: async (url, body) => {
         try {
+            const headers = { 'Content-Type': 'application/json' };
+            if(myVoidKey) headers['x-void-key'] = myVoidKey;
+
             const res = await fetch(url, { 
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json', 'x-void-key': myVoidKey}, 
-            body: JSON.stringify(body) 
+                method: 'POST', 
+                headers: headers, 
+                body: JSON.stringify(body) 
             });
+
             if (res.status === 401) { logout(); return null; }
             return res.json();
-        } catch(e) { notify("Transmission Failed", "error"); return null; }
+        } catch(e) { 
+            notify("Transmission Failed", "error"); 
+            return null; 
+        }
       },
+      
+      delete: async (url, body) => {
+         try {
+            const headers = { 'Content-Type': 'application/json' };
+            const res = await fetch(url, { 
+                method: 'DELETE', 
+                headers: headers, 
+                body: JSON.stringify(body) 
+            });
+            return res.json();
+         } catch(e) { return null; }
+      }
     };
 
-    // --- ROUTER ---
+    // --- ROUTER & VIEWS ---
     function navigateTo(page) {
       state.page = page;
       render();
       window.scrollTo(0, 0);
     }
 
-    // --- VIEWS ---
-
     // 1. LANDING
     const ViewLanding = () => `
       <div class="flex flex-col h-[80vh] justify-center items-center fade-in relative z-20">
-        <div class="relative mb-12 group">
-            <div class="absolute -inset-1 bg-gradient-to-r from-teal-600 to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-            <h1 class="relative text-7xl md:text-8xl font-thin text-white tracking-tighter glow-text select-none">VOID</h1>
-        </div>
+        <h1 class="text-7xl md:text-8xl font-thin text-white tracking-tighter glow-text select-none mb-4">VOID</h1>
         <p class="text-teal-500/40 text-xs tracking-[0.8em] uppercase mb-16 border-b border-teal-500/20 pb-4">Anonymous Identity System</p>
-
         <div class="w-full max-w-sm space-y-8 glass-panel p-8 rounded-2xl">
-          
           <div class="text-center">
             <h3 class="text-white text-lg font-light mb-1 tracking-wide">New Arrival</h3>
-            <p class="text-neutral-500 text-xs mb-6 font-light">Generate a secret key. This key is your only identity.</p>
-            <button onclick="let k = generateVoidKey(); login(k); notify('Key generated. Save it immediately.'); alert('Your Key is: ' + k + '\\n\\nSave this somewhere safe!');" class="w-full py-4 bg-teal-500/10 hover:bg-teal-500 hover:text-black border border-teal-500/50 text-teal-400 font-bold rounded-lg transition-all uppercase tracking-[0.2em] text-xs shadow-[0_0_20px_rgba(20,184,166,0.1)] hover:shadow-[0_0_30px_rgba(20,184,166,0.6)]">
-              Initialize Identity
-            </button>
+            <button onclick="let k = generateVoidKey(); login(k); notify('Identity Generated'); alert('Your Key is: ' + k + '\\n\\nSave this!');" class="w-full py-4 mt-4 bg-teal-500/10 hover:bg-teal-500 hover:text-black border border-teal-500/50 text-teal-400 font-bold rounded-lg transition-all uppercase tracking-[0.2em] text-xs shadow-[0_0_20px_rgba(20,184,166,0.1)]">Initialize Identity</button>
           </div>
-
-          <div class="flex items-center justify-center gap-4 opacity-30">
-            <div class="h-[1px] bg-white w-full"></div>
-            <span class="text-[10px] text-white uppercase tracking-widest">OR</span>
-            <div class="h-[1px] bg-white w-full"></div>
-          </div>
-
+          <div class="flex items-center justify-center gap-4 opacity-30"><div class="h-[1px] bg-white w-full"></div><span class="text-[10px] text-white uppercase tracking-widest">OR</span><div class="h-[1px] bg-white w-full"></div></div>
           <div class="text-center">
-            <p class="text-neutral-500 text-[10px] mb-3 uppercase tracking-widest">Recover Existing Room</p>
-            <div class="relative group">
-                <input type="text" id="loginKeyInput" placeholder="PASTE VOID-KEY" class="w-full bg-black/50 border border-white/10 p-4 rounded-lg text-white text-center tracking-[0.2em] uppercase text-xs focus:border-teal-500/50 focus:bg-black focus:outline-none transition-all placeholder-neutral-700">
-                <div class="absolute inset-0 border border-teal-500/0 rounded-lg pointer-events-none group-hover:border-teal-500/20 transition-all"></div>
-            </div>
-            <button onclick="login(document.getElementById('loginKeyInput').value)" class="mt-4 w-full py-3 text-neutral-400 hover:text-white text-xs uppercase tracking-widest transition-colors flex justify-center items-center gap-2 group">
-              <span>Enter The Void</span>
-              <span class="group-hover:translate-x-1 transition-transform">→</span>
-            </button>
+            <p class="text-neutral-500 text-[10px] mb-3 uppercase tracking-widest">Recover Identity</p>
+            <input type="text" id="loginKeyInput" placeholder="PASTE VOID-KEY" class="w-full bg-black/50 border border-white/10 p-4 rounded-lg text-white text-center tracking-[0.2em] uppercase text-xs focus:border-teal-500/50 focus:outline-none mb-4">
+            <button onclick="login(document.getElementById('loginKeyInput').value)" class="w-full py-3 text-neutral-400 hover:text-white text-xs uppercase tracking-widest transition-colors">Enter The Void →</button>
           </div>
-
         </div>
       </div>
     `;
@@ -130,42 +135,27 @@
     // 2. HOME
     const ViewHome = () => `
       <div class="flex flex-col h-full justify-center items-center fade-in text-center relative z-20 pt-10">
-        <div class="absolute top-0 right-0 p-4">
-            <button onclick="logout()" class="text-[10px] text-red-900 hover:text-red-500 uppercase tracking-widest border border-red-900/30 px-3 py-1 rounded hover:bg-red-900/10 transition-colors">Disconnect</button>
-        </div>
-        
+        <div class="absolute top-0 right-0 p-4"><button onclick="logout()" class="text-[10px] text-red-900 hover:text-red-500 uppercase tracking-widest border border-red-900/30 px-3 py-1 rounded hover:bg-red-900/10 transition-colors">Disconnect</button></div>
         <div class="mb-12 relative">
-          <div class="absolute -inset-4 bg-teal-500/5 rounded-full blur-xl"></div>
           <h1 class="relative text-6xl font-thin text-white mb-2 tracking-tighter glow-text">VOID</h1>
           <div onclick="copyKey()" class="cursor-pointer group flex flex-col items-center relative z-10">
              <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/5 group-hover:border-teal-500/30 transition-all">
                 <div class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></div>
                 <p class="text-teal-200/70 text-[10px] tracking-[0.2em] uppercase font-mono">ID: ${myVoidKey ? myVoidKey.substring(0,9)+'...' : 'Loading'}</p>
              </div>
-             <span class="text-[9px] text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest mt-2 transform translate-y-2 group-hover:translate-y-0 duration-300">Click to Copy Key</span>
+             <span class="text-[9px] text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest mt-2">Click to Copy Key</span>
           </div>
         </div>
-
         <div class="w-full space-y-6 max-w-sm">
-          <button onclick="navigateTo('write')" class="w-full group relative overflow-hidden p-6 glass-panel rounded-2xl text-left transition-all hover:border-teal-500/30">
-            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-            </div>
-            <h3 class="text-xl text-white font-light tracking-wide mb-1 group-hover:text-teal-300 transition-colors">Release Pain</h3>
-            <p class="text-xs text-neutral-400 font-light tracking-wide group-hover:text-neutral-300">Speak into the silence. Be heard.</p>
+          <button onclick="navigateTo('write')" class="w-full p-6 glass-panel rounded-2xl text-left transition-all hover:border-teal-500/30 group">
+            <h3 class="text-xl text-white font-light tracking-wide mb-1 group-hover:text-teal-300">Release Pain</h3>
+            <p class="text-xs text-neutral-400 font-light tracking-wide">Speak into the silence.</p>
           </button>
-          
-          <button onclick="navigateTo('reply')" class="w-full group relative overflow-hidden p-6 glass-panel rounded-2xl text-left transition-all hover:border-purple-500/30">
-            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
-            </div>
-            <h3 class="text-xl text-white font-light tracking-wide mb-1 group-hover:text-purple-300 transition-colors">Send Light</h3>
-            <p class="text-xs text-neutral-400 font-light tracking-wide group-hover:text-neutral-300">Comfort a stranger in the dark.</p>
+          <button onclick="navigateTo('reply')" class="w-full p-6 glass-panel rounded-2xl text-left transition-all hover:border-purple-500/30 group">
+            <h3 class="text-xl text-white font-light tracking-wide mb-1 group-hover:text-purple-300">Send Light</h3>
+            <p class="text-xs text-neutral-400 font-light tracking-wide">Comfort a stranger.</p>
           </button>
-          
-          <button onclick="navigateTo('myroom')" class="w-full py-4 text-neutral-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-all border-t border-transparent hover:border-white/10 mt-8">
-              Access Personal Archives
-          </button>
+          <button onclick="navigateTo('myroom')" class="w-full py-4 text-neutral-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-all border-t border-transparent hover:border-white/10 mt-8">Access Personal Archives</button>
         </div>
       </div>
     `;
@@ -174,17 +164,15 @@
     const ViewWrite = () => `
       <div class="fade-in">
         <h2 class="text-3xl font-thin text-white mb-8 text-center tracking-tight glow-text">Release Burden</h2>
-        
         <div class="glass-panel p-6 rounded-2xl mb-6">
             <div class="mb-8 text-center">
-              <label class="text-[10px] text-teal-500/70 uppercase tracking-[0.2em] mb-4 block">Choose Frequency</label>
+              <label class="text-[10px] text-teal-500/70 uppercase tracking-[0.2em] mb-4 block">Frequency</label>
               <div class="flex flex-wrap gap-2 justify-center">
                 ${['general', 'love', 'work', 'family', 'life'].map(r => `
                   <button onclick="selectRoom('${r}')" class="room-btn px-4 py-2 rounded-full border border-white/5 bg-black/20 text-[10px] text-neutral-400 hover:border-teal-500/50 hover:text-white hover:bg-teal-500/10 transition-all uppercase tracking-widest ${selectedRoom === r ? 'border-teal-500 text-teal-300 bg-teal-500/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : ''}" data-room="${r}">${r}</button>
                 `).join('')}
               </div>
             </div>
-            
             <div class="grid grid-cols-4 gap-3 mb-8">
               ${Object.keys(emojis).map(m => `
                 <button onclick="selectMood('${m}')" class="mood-btn p-3 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-teal-500/50 transition-all flex flex-col items-center gap-2 group" data-mood="${m}">
@@ -193,15 +181,11 @@
                 </button>
               `).join('')}
             </div>
-            
             <textarea id="postText" class="w-full h-48 bg-black/30 border border-white/10 rounded-xl p-5 text-neutral-200 placeholder-neutral-700 focus:outline-none focus:border-teal-500/50 focus:bg-black/50 transition-all resize-none mb-2 text-sm leading-relaxed" placeholder="Type here. No one knows it's you..."></textarea>
         </div>
-        
         <div class="flex gap-4">
              <button onclick="navigateTo('home')" class="w-1/3 py-4 border border-white/10 rounded-xl text-neutral-500 text-xs uppercase hover:text-white hover:bg-white/5 transition-all">Cancel</button>
-             <button id="transmitBtn" onclick="submitPost()" class="w-2/3 py-4 bg-teal-600 hover:bg-teal-500 text-black font-bold rounded-xl transition-all tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(20,184,166,0.3)] flex justify-center items-center gap-2">
-                Transmit
-             </button>
+             <button id="transmitBtn" onclick="submitPost()" class="w-2/3 py-4 bg-teal-600 hover:bg-teal-500 text-black font-bold rounded-xl transition-all tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(20,184,166,0.3)] flex justify-center items-center gap-2">Transmit</button>
         </div>
       </div>
     `;
@@ -214,14 +198,9 @@
               <button onclick="filterReplyRoom('${r}')" class="filter-btn text-[10px] uppercase tracking-widest transition-all ${currentFilter === r ? 'text-teal-400 border-b border-teal-400 pb-1' : 'text-neutral-600 hover:text-white pb-1 border-b border-transparent'}" id="filter-${r}">${r}</button>
           `).join('')}
         </div>
-        
         <div id="randomPost" class="flex-1 flex flex-col justify-center min-h-[400px]">
-          <div class="flex flex-col items-center gap-4">
-             <div class="spinner spinner-lg"></div>
-             <div class="text-center animate-pulse text-teal-500/50 tracking-widest text-xs uppercase">Scanning frequency...</div>
-          </div>
+          <div class="flex flex-col items-center gap-4"><div class="spinner spinner-lg"></div><div class="text-center animate-pulse text-teal-500/50 tracking-widest text-xs uppercase">Scanning frequency...</div></div>
         </div>
-        
         <button onclick="navigateTo('home')" class="mt-8 text-center text-neutral-700 hover:text-neutral-400 text-[10px] uppercase tracking-widest transition-colors">Return to Base</button>
       </div>
     `;
@@ -230,19 +209,13 @@
     const ViewMyRoom = () => `
       <div class="fade-in pb-20">
         <h2 class="text-3xl font-thin text-white mb-2 tracking-tight text-center glow-text">Archives</h2>
-        
         <div class="flex justify-center gap-12 mb-10 text-[10px] uppercase tracking-[0.2em] border-b border-white/5">
           <button onclick="switchRoomTab('my-posts')" class="pb-4 transition-all ${state.roomTab === 'my-posts' ? 'text-teal-400 border-b border-teal-400' : 'text-neutral-600 hover:text-neutral-300'}">Transmissions</button>
           <button onclick="switchRoomTab('joined')" class="pb-4 transition-all ${state.roomTab === 'joined' ? 'text-purple-400 border-b border-purple-400' : 'text-neutral-600 hover:text-neutral-300'}">Connections</button>
         </div>
-        
         <div id="roomContent" class="space-y-8 min-h-[200px]">
-           <div class="flex flex-col items-center gap-4 mt-12">
-             <div class="spinner"></div>
-             <div class="text-center text-neutral-700 text-xs uppercase tracking-widest">Decrypting logs...</div>
-           </div>
+           <div class="flex flex-col items-center gap-4 mt-12"><div class="spinner"></div><div class="text-center text-neutral-700 text-xs uppercase tracking-widest">Decrypting logs...</div></div>
         </div>
-        
         <button onclick="navigateTo('home')" class="w-full mt-12 text-neutral-700 hover:text-white text-[10px] uppercase tracking-widest transition-colors">Close Archives</button>
       </div>
     `;
@@ -251,14 +224,14 @@
     const ViewAdmin = () => `
       <div class="fade-in bg-red-950/20 p-6 rounded-xl min-h-screen border border-red-900/30">
         <h2 class="text-red-500 font-bold mb-6 tracking-widest uppercase">Admin Terminal</h2>
-        <input type="text" id="adminKey" placeholder="Authorization Code" class="bg-black border border-red-900/50 p-3 rounded text-white mb-4 w-full text-xs font-mono focus:outline-none focus:border-red-500">
+        <p class="text-red-400/50 text-[10px] mb-4 uppercase">System Control</p>
+        <input type="password" id="adminKey" placeholder="Authorization Code" class="bg-black border border-red-900/50 p-3 rounded text-white mb-4 w-full text-xs font-mono focus:outline-none focus:border-red-500">
         <button onclick="loadAdmin()" class="bg-red-900/50 hover:bg-red-800 text-red-200 px-4 py-2 rounded w-full mb-8 uppercase text-xs tracking-widest transition-colors">Authenticate</button>
         <div id="adminContent" class="space-y-4"></div>
       </div>
     `;
 
     // --- LOGIC FUNCTIONS ---
-    
     let selectedMood = null;
     let selectedRoom = 'general';
     let currentFilter = 'all';
@@ -291,14 +264,13 @@
     
     function filterReplyRoom(r) {
       currentFilter = r;
-      render(); // simplified re-render to update UI
+      render(); 
     }
 
     async function submitPost() {
       const text = document.getElementById("postText").value;
       if (!selectedMood || !text) return notify("Please select a mood and write.", 'error');
       
-      // Loading State
       const btn = document.getElementById('transmitBtn');
       const originalText = btn.innerHTML;
       btn.disabled = true;
@@ -306,7 +278,6 @@
 
       const res = await api.post('/api/post', { mood: selectedMood, text, room: selectedRoom });
       
-      // Restore Button
       btn.disabled = false;
       btn.innerHTML = originalText;
 
@@ -327,8 +298,6 @@
       const container = document.getElementById('randomPost');
       if(!container) return;
       
-      // Spinner is handled by the initial ViewReply render, 
-      // but if we call this manually we reset to spinner:
       container.innerHTML = `
           <div class="flex flex-col items-center gap-4">
              <div class="spinner spinner-lg"></div>
@@ -390,7 +359,6 @@
     }
     
     async function loadRoomData() {
-      // Spinner handled by ViewMyRoom initial render
       const data = await api.get('/api/my-room');
       const container = document.getElementById('roomContent');
       if(!data || !container) return;
@@ -457,7 +425,6 @@
        const input = document.getElementById(`reply-input-${postId}`);
        const txt = input.value;
        if(txt) {
-         // Tiny local loading indicator for chat
          const originalPlaceholder = input.placeholder;
          input.value = "";
          input.placeholder = "Transmitting...";
@@ -485,6 +452,11 @@
       if(res && res.error) { div.innerHTML = "<span class='text-red-500'>ACCESS DENIED</span>"; return; }
       if(res) {
           div.innerHTML = `<h3 class="text-white border-b border-red-900/30 pb-2 mb-4 text-xs uppercase tracking-widest">Flagged Transmissions</h3>`;
+          
+          if(res.flaggedPosts.length === 0) {
+             div.innerHTML += `<div class="text-neutral-500 text-xs italic">No active threats detected.</div>`;
+          }
+
           res.flaggedPosts.forEach(p => {
             div.innerHTML += `
               <div class="bg-black/50 border border-red-900/50 p-3 rounded mb-2">
@@ -502,11 +474,7 @@
     
     async function banUser(token, key) {
       if(confirm("Permanently disconnect user?")) {
-        await fetch('/api/admin/ban?key='+key, { 
-          method: 'DELETE', 
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ token, deleteContent: true })
-        });
+        await api.delete('/api/admin/ban?key='+key, { token, deleteContent: true });
         notify("User terminated.", "error");
         loadAdmin();
       }
