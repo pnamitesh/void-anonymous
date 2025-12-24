@@ -70,18 +70,52 @@ const VoidReply = mongoose.model("VoidReply", voidReplySchema);
 // ==================
 
 // We no longer track IPs. We trust the Key.
+// async function authUser(req, res, next) {
+//   // 1. Get the key from the request header
+//   const voidKey = req.headers["x-void-key"];
+
+//   if (!voidKey || voidKey.length < 10) {
+//     return res.status(401).json({ error: "Missing or invalid Void Key" });
+//   }
+
+//   // 2. Find the user by their UNIQUE Key
+//   let user = await User.findOne({ deviceToken: voidKey });
+
+//   // 3. If they don't exist, create them (The first time they use a generated key)
+//   if (!user) {
+//     user = await User.create({ deviceToken: voidKey });
+//     console.log(`🌑 New Void Traveler: ${voidKey.substring(0, 6)}...`);
+//   }
+
+//   if (user.isBanned) {
+//     return res.status(200).json({ success: true, shadowBanned: true });
+//   }
+
+//   req.user = user;
+//   next();
+// }
+
 async function authUser(req, res, next) {
   // 1. Get the key from the request header
   const voidKey = req.headers["x-void-key"];
 
-  if (!voidKey || voidKey.length < 10) {
-    return res.status(401).json({ error: "Missing or invalid Void Key" });
+  if (!voidKey) {
+    return res.status(401).json({ error: "Missing Void Key" });
   }
+
+  // --- SECURITY FIX: Enforce Key Format ---
+  // Must look like: VOID-XXXX-XXXX-XXXX (uppercase alphanumeric)
+  const keyPattern = /^VOID-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+  
+  if (!keyPattern.test(voidKey)) {
+     return res.status(401).json({ error: "Invalid Key Format. Access Denied." });
+  }
+  // ----------------------------------------
 
   // 2. Find the user by their UNIQUE Key
   let user = await User.findOne({ deviceToken: voidKey });
 
-  // 3. If they don't exist, create them (The first time they use a generated key)
+  // 3. If they don't exist, create them
   if (!user) {
     user = await User.create({ deviceToken: voidKey });
     console.log(`🌑 New Void Traveler: ${voidKey.substring(0, 6)}...`);
