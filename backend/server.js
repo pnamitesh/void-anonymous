@@ -169,6 +169,35 @@ app.post("/api/post", authUser, async (req, res) => {
 });
 
 // Get Random Post (Smart Matching)
+// app.get("/api/post/random", authUser, async (req, res) => {
+//   const { room } = req.query;
+
+//   // 1. Build Filter
+//   let matchStage = { 
+//     status: "active", 
+//     reports: { $lt: 3 },
+//     authorToken: { $ne: req.user.deviceToken } // Don't show my own posts
+//   };
+
+//   // Filter by specific room if requested (and not 'all')
+//   if (room && room !== 'all') {
+//     matchStage.room = room;
+//   }
+
+//   // 2. Aggregation Pipeline
+//   const posts = await VoidPost.aggregate([
+//     { $match: matchStage },
+//     // Randomize sort order slightly so 50 users don't all get the exact same post
+//     { $addFields: { sortKey: { $rand: {} } } }, 
+//     // PRIORITIZE posts with 0 replies (replyCount: 1 ascending), then random
+//     { $sort: { replyCount: 1, sortKey: 1 } }, 
+//     { $limit: 1 }
+//   ]);
+  
+//   if (!posts.length) return res.status(204).send();
+//   res.json(posts[0]);
+// });
+// Get Random Post (Improved Algorithm: Fresh & Lonely)
 app.get("/api/post/random", authUser, async (req, res) => {
   const { room } = req.query;
 
@@ -179,7 +208,6 @@ app.get("/api/post/random", authUser, async (req, res) => {
     authorToken: { $ne: req.user.deviceToken } // Don't show my own posts
   };
 
-  // Filter by specific room if requested (and not 'all')
   if (room && room !== 'all') {
     matchStage.room = room;
   }
@@ -187,15 +215,27 @@ app.get("/api/post/random", authUser, async (req, res) => {
   // 2. Aggregation Pipeline
   const posts = await VoidPost.aggregate([
     { $match: matchStage },
-    // Randomize sort order slightly so 50 users don't all get the exact same post
-    { $addFields: { sortKey: { $rand: {} } } }, 
-    // PRIORITIZE posts with 0 replies (replyCount: 1 ascending), then random
-    { $sort: { replyCount: 1, sortKey: 1 } }, 
-    { $limit: 1 }
+    
+    // --- THE ALGORITHM FIX ---
+    
+    // Step A: Sort by lowest replies first (Help the lonely), 
+    // BUT break ties by newest creation date (Help the urgent).
+    { $sort: { replyCount: 1, createdAt: -1 } },
+
+    // Step B: Grab the top 50 candidates. 
+    // This gives us a pool of the "Freshest & Loneliest" posts.
+    { $limit: 50 },
+
+    // Step C: Pick 1 random post from that pool.
+    // This adds variety so every user doesn't get the exact same "top" post.
+    { $sample: { size: 1 } }
   ]);
   
   if (!posts.length) return res.status(204).send();
-  res.json(posts[0]);
+  
+  // (Optional) Add a flag so frontend knows if it's a "fresh" signal
+  const post = posts[0];
+  res.json(post);
 });
 
 // Create Reply
